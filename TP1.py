@@ -194,21 +194,27 @@ consulta_sql = """
                 SELECT DISTINCT *
                 FROM info_padron_C;
 """
-df_padron = sql^consulta_sql
+df_padron0 = sql^consulta_sql
 
 
 #Buscamos definir un df que exprese la relación entre rubro y clase
+#Vemos primero que todos los Operadores de la categoría 3 tienen su rubro como 'SIN DEFINIR' 
+#Decidimos completar la columna rubro con 'COMERCIALIZADORES'
 
-#Creamos una lista con todos los valores posibles que toma rubro, para poder crear un df
-rubros = df_padron['rubro'].unique().tolist()
-actividades = pd.DataFrame({'rubro': rubros})
+consulta_sql = """
+                SELECT departamento_id, establecimiento, razon_social, producto, Certificadora_id, categoria_id, provincia_id, REPLACE(rubro, 'SIN DEFINIR', 'COMERCIALIZADORES') AS rubro
+                FROM df_padron0;
+"""
+df_padron = sql^consulta_sql
 
 #formo una lista con todos los distintos rubros que se encuentran dentro de la categoría 1
 df_productores = df_padron[df_padron['categoria_id']==1]
 rubros_productores = df_productores['rubro'].unique().tolist()
 
-#Vemos que todos los elementos de esta lista pertenecen a la clase 1
+#Vemos que todos los elementos de esta lista pertenecen a la clase 1. 
+#Creamos un df correspondiente a los rubros de la clase 1
 rubros_clase1 = rubros_productores
+df_clase1 = pd.DataFrame({'rubro': rubros_clase1, 'clase': '1'})
 
 #Ahora, hacemos lo mismo con los rubros de la categoría 2
 df_elaboradores = df_padron[df_padron['categoria_id']==2]
@@ -226,15 +232,46 @@ for l in rubros_elaboradores:
         if p in l:
             rubros_clase11.append(l)
             
-#Ahora defino los rubros de la clase 10 eliminando de la lista original
+#Defino los rubros de la clase 10 eliminando de la lista original
 #los rubros que ya se encuentran definidos dentro de otras clases
 rubros_clase10 = []
 for l in rubros_elaboradores:
     if l not in rubros_clase13 and l not in rubros_clase21 and l not in rubros_clase11:
         rubros_clase10.append(l)
 
-#Ahora, agregamos el valor de la columna 'Clase' al df creado
+#Ahora, creamos un df para cada una de las clases
+df_clase10 = pd.DataFrame({'rubro': rubros_clase10, 'clase': '10'})
+df_clase11 = pd.DataFrame({'rubro': rubros_clase11, 'clase': '11'})
+df_clase13 = pd.DataFrame({'rubro': rubros_clase13, 'clase': '13'})
+df_clase21 = pd.DataFrame({'rubro': rubros_clase21, 'clase': '21'})
 
+#En el caso de la categoría 3, por el reemplazo que realizamos, sabemos que el rubro será 'COMERCIALIZADORES'
+#Decidimos ubicar este rubro dentro de la clase 46
+df_clase46 = df_clase46 = pd.DataFrame({'rubro': ['COMERCIALIZADORES'], 'clase': '46'})
+
+#La relación final será el resultado de la unión de todas estas tablas
+consulta_sql = """
+                SELECT DISTINCT *
+                FROM df_clase1
+                WHERE rubro IS NOT NULL
+                UNION
+                SELECT DISTINCT *
+                FROM df_clase10
+                UNION
+                SELECT DISTINCT *
+                FROM df_clase11
+                UNION
+                SELECT DISTINCT *
+                FROM df_clase13
+                UNION
+                SELECT DISTINCT *
+                FROM df_clase21
+                UNION
+                SELECT DISTINCT *
+                FROM df_clase46
+                ORDER BY clase;
+""" 
+actividades = sql^consulta_sql
 
 """
 SQL
@@ -267,6 +304,28 @@ consulta_sql = """
                 """
 cant_dptos_sin_operadores = sql^consulta_sql
 
+#¿Cuál es la actividad que más operadores tiene?
+consulta_sql = """
+                SELECT a.clase, COUNT(*) AS cantidad_de_operadores
+                FROM df_padron AS p, actividades AS a, info_clase AS c
+                WHERE p.rubro = a.rubro AND a.clase = c.id_clase
+                GROUP BY a.clase
+                ;
+                
+"""
+cant_operadores = sql^consulta_sql
+
+consulta_sql = """
+                SELECT clase, cantidad_de_operadores
+                FROM cant_operadores
+                WHERE cantidad_de_operadores = (
+                                                SELECT MAX(cantidad_de_operadores)
+                                                FROM cant_operadores
+                                                )
+                ;
+"""
+max_cant_operadores = sql^consulta_sql
+
 #¿Cuál es el promedio anual de los salarios en Argentina y cual es su desvío?
 
 consulta_sql = """
@@ -287,4 +346,3 @@ consulta_sql = """
                 ORDER BY provincia, año;
                 """
 prom_y_desv_prov = sql^consulta_sql
-
