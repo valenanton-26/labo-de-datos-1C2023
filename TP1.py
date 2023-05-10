@@ -8,6 +8,7 @@ Created on Tue May  9 14:11:54 2023
 import pandas as pd
 import csv
 from inline_sql import sql, sql_val
+from unidecode import unidecode
 
 padron = pd.read_csv("~/Descargas/padron-de-operadores-organicos-certificados.csv", encoding='latin-1')
 salarios = pd.read_csv("~/Descargas/w_median_depto_priv_clae2.csv")
@@ -16,6 +17,9 @@ dic_clases = pd.read_csv("~/Descargas/diccionario_clae2.csv")
 dic_dptos = pd.read_csv("~/Descargas/diccionario_cod_depto.csv")
 
 #Normalización
+#Defino una función para elimiar las tildes de un string
+def eliminar_tildes(s):
+    return unidecode(s)
 
 #Padron a 1FN
 padron['productos'] = padron['productos'].str.split(',')
@@ -29,19 +33,25 @@ provincias = dic_dptos[['id_provincia_indec', 'nombre_provincia_indec']].copy()
 provincias =  provincias.drop_duplicates()
 provincias = provincias.rename(columns={'id_provincia_indec' : 'id_provincia', 'nombre_provincia_indec' :'nombre_provincia'})
 
+
 departamentos = dic_dptos[['codigo_departamento_indec', 'nombre_departamento_indec', 'id_provincia_indec']].copy()
 departamentos = departamentos.rename(columns={'codigo_departamento_indec' : 'id_depto', 'nombre_departamento_indec' : 'nombre_depto', 'id_provincia_indec' : 'id_provincia'})
+departamentos['nombre_depto'] = departamentos['nombre_depto'].apply(eliminar_tildes)
+
 #Clases a 3FN
 
 info_letra = dic_clases[['letra', 'letra_desc']].copy()
 info_letra =  info_letra.drop_duplicates()
+info_letra['letra_desc'] = info_letra['letra_desc'].apply(eliminar_tildes)
 
 info_clase = dic_clases[['clae2', 'clae2_desc', 'letra']].copy()
 info_clase = info_clase.rename(columns={'clae2' : 'id_clase', 'clae2_desc' : 'clase_desc'})
+info_clase['clase_desc'] = info_clase['clase_desc'].apply(eliminar_tildes)
 
 #Localidades a 3FN
 
 info_localidades = localidades_censales[['id', 'nombre', 'categoria', 'centroide_lat', 'centroide_lon', 'departamento_id']].copy()
+info_localidades['nombre'] = info_localidades['nombre'].apply(eliminar_tildes)
 
 #Tabla de municipios
 
@@ -51,6 +61,7 @@ consulta_SQL = """
             WHERE municipio_id IS NOT NULL;
             """
 municipios = sql^consulta_SQL
+municipios['municipio_nombre'] = municipios['municipio_nombre'].apply(eliminar_tildes)
 
 #Salarios a 3FN
 
@@ -65,25 +76,29 @@ info_salarios = salarios[['fecha', 'codigo_departamento_indec', 'clae2','w_media
 info_salarios = info_salarios.rename(columns={'codigo_departamento_indec' : 'id_depto', 'clae2' : 'id_clase', 'w_median' : 'salario'})
 info_salarios = info_salarios[info_salarios['salario']>=0]
 
-
 #Padron a 3FN
 
 info_padron = padron.copy()
 info_padron = info_padron.rename(columns={'razón social' : 'razon_social', 'productos' : 'producto'})
 info_padron = info_padron[['departamento', 'establecimiento','razon_social', 'producto', 'rubro','Certificadora_id', 'categoria_id', 'provincia_id']]
 info_padron = info_padron.drop_duplicates()
+info_padron['departamento'] = info_padron['departamento'].apply(eliminar_tildes)
+
+
+certificadora = padron[['Certificadora_id', 'certificadora_deno']].copy()
+
+categoria = padron[['categoria_id', 'categoria_desc']].copy()
 
 
 #Buscamos los departamentos que figuran en padron que no están registrados como departamentos en el diccionario
 consulta_sql = """
-                SELECT DISTINCT p.departamento
+                SELECT DISTINCT p.departamento, p.provincia_id
                 FROM departamentos AS d
                 RIGHT OUTER JOIN info_padron AS p
                 ON p.departamento = UPPER(d.nombre_depto)
                 WHERE d.id_depto IS NULL;
                 """
 no_departamentos = sql^consulta_sql
-print(no_departamentos)
 
 #Verificamos si alguno de estos departamentos es localidad
 consulta_sql = """
@@ -93,39 +108,110 @@ consulta_sql = """
                 """
 son_localidades = sql^consulta_sql
 
-#Asignamos a estas localidades el id del dpto correspondiente
+#Asignamos a estas localidades los id de dpto y provincia correspondientes
 consulta_sql = """
-                SELECT DISTINCT sl.localidad, l.departamento_id, d.nombre_depto
+                SELECT DISTINCT sl.localidad, l.departamento_id, d.id_provincia
                 FROM son_localidades AS sl, info_localidades AS l, departamentos AS d
-                WHERE sl.localidad = UPPER(l.nombre) AND l.departamento_id = d.id_depto;
+                WHERE sl.localidad = UPPER(l.nombre) AND l.departamento_id = d.id_depto
+                ORDER BY localidad;
                 """
 loc_y_deptos = sql^consulta_sql
 
-#Remplazamos esta información en el df info_padron
+#Saque las localidades con mismo nombre y provincia, pero departamento distinto.
+consulta_sql = """
+                SELECT DISTINCT *
+                FROM loc_y_deptos AS l1
+                WHERE NOT EXISTS (
+                        SELECT *
+                        FROM loc_y_deptos AS l2
+                        WHERE l1.localidad = l2.localidad AND l1.id_provincia = l2.id_provincia AND NOT l1.departamento_id = l2.departamento_id)
+                ORDER BY localidad;
+                """
 
+loc_deptos = sql^consulta_sql
 
-certificadora = padron[['Certificadora_id', 'certificadora_deno']].copy()
+#Ahora, busco obtener el df dentro de info_padron con la información 
+#de los establecimientos que tienen cargada una localidad como nombre de departamento
+consulta_sql = """
+                SELECT l.departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.Certificadora_id, p.categoria_id, p.provincia_id
+                FROM info_padron AS p, loc_deptos AS l
+                WHERE p.departamento = l.localidad AND p.provincia_id = l.id_provincia
+                ORDER BY departamento_id;
+"""
+info_padron_A = sql^consulta_sql
 
-categoria = padron[['categoria_id', 'categoria_desc']].copy()
+#Ahora verificamos si los departamentos que no fueron identificados como localidad, son municipios
+#Primero busco obtener una serie de los que no fueron identificados como localidad
+
+consulta_sql = """
+                SELECT DISTINCT nd.departamento AS no_departamento, nd.provincia_id
+                FROM no_departamentos AS nd
+                LEFT OUTER JOIN info_localidades AS l
+                ON nd.departamento = UPPER(l.nombre)
+                WHERE l.nombre IS NULL;
+"""
+no_localidades = sql^consulta_sql
+#Verifico si alguno de ellos es un municipio y, mediante su provincia y localidad, lo asocio a su departamento
+consulta_sql = """
+                SELECT DISTINCT nl.no_departamento AS municipio, nl.provincia_id, d.id_depto
+                FROM no_localidades AS nl, municipios AS m, info_localidades AS l, departamentos AS d
+                WHERE nl.no_departamento = UPPER(m.municipio_nombre)
+                AND m.localidad_id = l.id AND l.departamento_id = d.id_depto
+                AND nl.provincia_id = d.id_provincia
+                ORDER BY municipio;
+                """
+son_municipios = sql^consulta_sql
+
+#Ahora, busco obtener el df dentro de info_padron con la información 
+#de los establecimientos que tienen cargado un municipio como nombre de departamento
+consulta_sql = """
+                SELECT m.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.Certificadora_id, p.categoria_id, p.provincia_id
+                FROM info_padron AS p, son_municipios AS m
+                WHERE p.departamento = m.municipio AND p.provincia_id = m.provincia_id
+                ORDER BY departamento_id;
+"""
+info_padron_B = sql^consulta_sql
+
+#Ahora vamos obtener un df de las filas en info_padron que tienen el dato de departamento correctamente cargado
+#lo vamos a relacionar con su id de departamento y organizarlo de la misma manera que los dos padrones anteriores, para luego poder unirlos
+
+consulta_sql = """
+                SELECT d.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.Certificadora_id, p.categoria_id, p.provincia_id
+                FROM info_padron AS p, departamentos AS d
+                WHERE p.departamento = UPPER(d.nombre_depto) AND p.provincia_id = d.id_provincia
+                ORDER BY departamento, id_depto;
+"""
+info_padron_C = sql^consulta_sql
+
+#Finalmente, unimos las 3 tablas para definir el df final con el que vamos a trabajar
+consulta_sql = """
+                SELECT DISTINCT *
+                FROM info_padron_A
+                UNION
+                SELECT DISTINCT *
+                FROM info_padron_B
+                UNION
+                SELECT DISTINCT *
+                FROM info_padron_C;
+"""
+df_padron = sql^consulta_sql
 
 
 #Buscamos definir un df que exprese la relación entre rubro y clase
 
 #Creamos una lista con todos los valores posibles que toma rubro, para poder crear un df
-rubros = info_padron['rubro'].unique().tolist()
+rubros = df_padron['rubro'].unique().tolist()
 actividades = pd.DataFrame({'rubro': rubros})
 
 #formo una lista con todos los distintos rubros que se encuentran dentro de la categoría 1
-df_productores = info_padron[info_padron['categoria_id']==1]
+df_productores = df_padron[df_padron['categoria_id']==1]
 rubros_productores = df_productores['rubro'].unique().tolist()
 
-#Vemos que todos los elementos de esta lista pertenecen a la clase 1, excepto acuicultura
-rubros_productores.remove('ACUICULTURA')
+#Vemos que todos los elementos de esta lista pertenecen a la clase 1
 rubros_clase1 = rubros_productores
-rubros_clase3 = ['ACUICULTURA']
 
 #Ahora, hacemos lo mismo con los rubros de la categoría 2
-df_elaboradores = info_padron[info_padron['categoria_id']==2]
+df_elaboradores = df_padron[df_padron['categoria_id']==2]
 rubros_elaboradores = df_elaboradores['rubro'].unique().tolist()
 
 #Defino los rubros de clase 13 y clase 21 
@@ -148,16 +234,7 @@ for l in rubros_elaboradores:
         rubros_clase10.append(l)
 
 #Ahora, agregamos el valor de la columna 'Clase' al df creado
-actividades['clase'] = ''
-i = 0
-while i < len(actividades):
-    if actividades.loc[i, 'rubro'] in rubros_clase1:
-        actividades.loc[i, 'clase'] = 1
-    else if actividades.loc[i, 'rubro'] in rubros_clase3:
-        actividades.loc[i, 'clase'] = 3
-    i += 1
 
-print(actividades)
 
 """
 SQL
@@ -167,7 +244,7 @@ SQL
 
 consulta_sql = """
                 SELECT DISTINCT prov.nombre_provincia AS 'Provincias sin Operadores'
-                FROM info_padron AS padron
+                FROM df_padron AS padron
                 RIGHT OUTER JOIN provincias AS prov
                 ON padron.provincia_id = prov.id_provincia
                 WHERE padron.provincia_id IS NULL;
@@ -177,10 +254,10 @@ consulta_sql = """
                 
 consulta_sql= """
                 SELECT DISTINCT dpto.nombre_depto AS 'Departamentos sin Operadores'
-                FROM info_padron AS padron
+                FROM df_padron AS padron
                 RIGHT OUTER JOIN departamentos AS dpto
-                ON padron.departamento = UPPER(dpto.nombre_depto)
-                WHERE padron.departamento IS NULL;
+                ON padron.departamento_id = dpto.id_depto
+                WHERE padron.departamento_id IS NULL;
                 """
 Dptos_sin_operadores = sql^consulta_sql
 
@@ -211,4 +288,3 @@ consulta_sql = """
                 """
 prom_y_desv_prov = sql^consulta_sql
 
-print(prom_y_desv_prov)
