@@ -26,6 +26,12 @@ padron['productos'] = padron['productos'].str.split(',')
 padron = padron.explode('productos')
 padron['productos'] = padron['productos'].str.split(' Y ')
 padron = padron.explode('productos')
+padron['productos'] = padron['productos'].str.split('?')
+padron = padron.explode('productos')
+padron['productos'] = padron['productos'].str.split(';')
+padron = padron.explode('productos')
+padron['productos'] = padron['productos'].str.strip()
+padron['productos'] = padron['productos'].str.replace('.','')
 
 #Departamentos a 3FN
 
