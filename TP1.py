@@ -78,16 +78,18 @@ info_salarios = info_salarios[info_salarios['salario']>=0]
 
 #Padron a 3FN
 
+#Empiezo primero por las relaciones de categoría y certificadora
+certificadora = padron[['Certificadora_id', 'certificadora_deno']].copy()
+
+categoria = padron[['categoria_id', 'categoria_desc']].copy()
+
+#Con el resto de las columnas, comienzo la limpieza de padron
 info_padron = padron.copy()
 info_padron = info_padron.rename(columns={'razón social' : 'razon_social', 'productos' : 'producto'})
 info_padron = info_padron[['departamento', 'establecimiento','razon_social', 'producto', 'rubro','Certificadora_id', 'categoria_id', 'provincia_id']]
 info_padron = info_padron.drop_duplicates()
 info_padron['departamento'] = info_padron['departamento'].apply(eliminar_tildes)
-
-
-certificadora = padron[['Certificadora_id', 'certificadora_deno']].copy()
-
-categoria = padron[['categoria_id', 'categoria_desc']].copy()
+info_padron = info_padron.rename(columns={'Certificadora_id' : 'certificadora_id'})
 
 
 #Buscamos los departamentos que figuran en padron que no están registrados como departamentos en el diccionario
@@ -133,7 +135,7 @@ loc_deptos = sql^consulta_sql
 #Ahora, busco obtener el df dentro de info_padron con la información 
 #de los establecimientos que tienen cargada una localidad como nombre de departamento
 consulta_sql = """
-                SELECT l.departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.Certificadora_id, p.categoria_id, p.provincia_id
+                SELECT l.departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.certificadora_id, p.categoria_id, p.provincia_id
                 FROM info_padron AS p, loc_deptos AS l
                 WHERE p.departamento = l.localidad AND p.provincia_id = l.id_provincia
                 ORDER BY departamento_id;
@@ -165,7 +167,7 @@ son_municipios = sql^consulta_sql
 #Ahora, busco obtener el df dentro de info_padron con la información 
 #de los establecimientos que tienen cargado un municipio como nombre de departamento
 consulta_sql = """
-                SELECT m.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.Certificadora_id, p.categoria_id, p.provincia_id
+                SELECT m.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.certificadora_id, p.categoria_id, p.provincia_id
                 FROM info_padron AS p, son_municipios AS m
                 WHERE p.departamento = m.municipio AND p.provincia_id = m.provincia_id
                 ORDER BY departamento_id;
@@ -176,7 +178,7 @@ info_padron_B = sql^consulta_sql
 #lo vamos a relacionar con su id de departamento y organizarlo de la misma manera que los dos padrones anteriores, para luego poder unirlos
 
 consulta_sql = """
-                SELECT d.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.Certificadora_id, p.categoria_id, p.provincia_id
+                SELECT d.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.certificadora_id, p.categoria_id, p.provincia_id
                 FROM info_padron AS p, departamentos AS d
                 WHERE p.departamento = UPPER(d.nombre_depto) AND p.provincia_id = d.id_provincia
                 ORDER BY departamento, id_depto;
@@ -202,7 +204,7 @@ df_padron0 = sql^consulta_sql
 #Decidimos completar la columna rubro con 'COMERCIALIZADORES'
 
 consulta_sql = """
-                SELECT departamento_id, establecimiento, razon_social, producto, Certificadora_id, categoria_id, provincia_id, REPLACE(rubro, 'SIN DEFINIR', 'COMERCIALIZADORES') AS rubro
+                SELECT departamento_id, establecimiento, razon_social, producto, certificadora_id, categoria_id, provincia_id, REPLACE(rubro, 'SIN DEFINIR', 'COMERCIALIZADORES') AS rubro
                 FROM df_padron0;
 """
 df_padron = sql^consulta_sql
@@ -284,19 +286,22 @@ consulta_sql = """
                 FROM df_padron AS padron
                 RIGHT OUTER JOIN provincias AS prov
                 ON padron.provincia_id = prov.id_provincia
-                WHERE padron.provincia_id IS NULL;
+                WHERE prov.id_provincia IS NULL;
                 """
+prov_sin_operadores = sql^consulta_sql
 
 #¿Existen departamentos que no presentan Operadores Orgánicos Certificados?
                 
 consulta_sql= """
-                SELECT DISTINCT dpto.nombre_depto AS 'Departamentos sin Operadores'
+                SELECT DISTINCT dpto.nombre_depto AS 'Departamentos sin Operadores', dpto.id_provincia
                 FROM df_padron AS padron
                 RIGHT OUTER JOIN departamentos AS dpto
-                ON padron.departamento_id = dpto.id_depto
-                WHERE padron.departamento_id IS NULL;
+                ON padron.departamento_id = dpto.id_depto 
+                AND padron.provincia_id = dpto.id_provincia
+                WHERE padron.departamento_id IS NULL
+                ORDER BY nombre_depto;
                 """
-Dptos_sin_operadores = sql^consulta_sql
+dptos_sin_operadores = sql^consulta_sql
 
 consulta_sql = """
                 SELECT COUNT(*) AS 'Cantidad de departamentos sin Operadores'
@@ -305,9 +310,23 @@ consulta_sql = """
 cant_dptos_sin_operadores = sql^consulta_sql
 
 #¿Cuál es la actividad que más operadores tiene?
+#Como separamos los productos, sabemos que la tabla cuenta con varias filas que corresponden 
+#a un mismo operador trabajando en un mismo rubro y, por lo tanto, en una misma actividad. 
+
+#Para poder responder esta pregunta, primero vamos a filtrar el df
+#Dejando una sola fila por cada operador orgánico trabajando en un rubro
+consulta_sql = """
+                SELECT DISTINCT departamento_id, establecimiento, razon_social, 
+                certificadora_id, categoria_id, provincia_id, rubro
+                FROM df_padron;
+"""
+operadores_por_rubro = sql^consulta_sql
+
+#Ahora si, contamos la cantidad de operadores sobre este nuevo df
+
 consulta_sql = """
                 SELECT a.clase, COUNT(*) AS cantidad_de_operadores
-                FROM df_padron AS p, actividades AS a, info_clase AS c
+                FROM operadores_por_rubro AS p, actividades AS a, info_clase AS c
                 WHERE p.rubro = a.rubro AND a.clase = c.id_clase
                 GROUP BY a.clase
                 ;
@@ -325,6 +344,26 @@ consulta_sql = """
                 ;
 """
 max_cant_operadores = sql^consulta_sql
+
+#¿Cuál fue el salario promedio de esa actividad en 2022? 
+#(si hay variosregistros de salario, mostrar el más actual de ese año)
+consulta_sql = """
+                SELECT fecha, clase, salario_promedio
+                FROM (
+                    SELECT CAST(s.fecha AS DATE) AS fecha, m.clase, MEAN(s.salario) AS salario_promedio
+                    FROM max_cant_operadores AS m, info_salarios AS s
+                    WHERE m.clase = s.id_clase AND YEAR(CAST(fecha AS DATE))=2022
+                    GROUP BY CAST(s.fecha AS DATE), m.clase
+                    )
+                WHERE fecha = (
+                                    SELECT MAX(CAST(fecha AS DATE))
+                                    FROM info_salarios
+                                    WHERE YEAR(CAST(fecha AS DATE))=2022
+                                )
+                
+                ;
+"""
+salario_prom_c1_2022 = sql^consulta_sql
 
 #¿Cuál es el promedio anual de los salarios en Argentina y cual es su desvío?
 
