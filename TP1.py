@@ -89,10 +89,9 @@ certificadora = padron[['Certificadora_id', 'certificadora_deno']].copy()
 
 categoria = padron[['categoria_id', 'categoria_desc']].copy()
 
-#Con el resto de las columnas, comienzo la limpieza de padron
+#Empiezo la limpieza de padron
 info_padron = padron.copy()
 info_padron = info_padron.rename(columns={'razón social' : 'razon_social', 'productos' : 'producto'})
-info_padron = info_padron[['departamento', 'establecimiento','razon_social', 'producto', 'rubro','Certificadora_id', 'categoria_id', 'provincia_id']]
 info_padron = info_padron.drop_duplicates()
 info_padron['departamento'] = info_padron['departamento'].apply(eliminar_tildes)
 info_padron = info_padron.rename(columns={'Certificadora_id' : 'certificadora_id'})
@@ -141,7 +140,7 @@ loc_deptos = sql^consulta_sql
 #Ahora, busco obtener el df dentro de info_padron con la información 
 #de los establecimientos que tienen cargada una localidad como nombre de departamento
 consulta_sql = """
-                SELECT l.departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.certificadora_id, p.categoria_id, p.provincia_id
+                SELECT l.departamento_id, p.*
                 FROM info_padron AS p, loc_deptos AS l
                 WHERE p.departamento = l.localidad AND p.provincia_id = l.id_provincia
                 ORDER BY departamento_id;
@@ -173,7 +172,7 @@ son_municipios = sql^consulta_sql
 #Ahora, busco obtener el df dentro de info_padron con la información 
 #de los establecimientos que tienen cargado un municipio como nombre de departamento
 consulta_sql = """
-                SELECT m.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.certificadora_id, p.categoria_id, p.provincia_id
+                SELECT m.id_depto AS departamento_id, p.*
                 FROM info_padron AS p, son_municipios AS m
                 WHERE p.departamento = m.municipio AND p.provincia_id = m.provincia_id
                 ORDER BY departamento_id;
@@ -184,7 +183,7 @@ info_padron_B = sql^consulta_sql
 #lo vamos a relacionar con su id de departamento y organizarlo de la misma manera que los dos padrones anteriores, para luego poder unirlos
 
 consulta_sql = """
-                SELECT d.id_depto AS departamento_id, p.establecimiento, p.razon_social, p.producto, p.rubro, p.certificadora_id, p.categoria_id, p.provincia_id
+                SELECT d.id_depto AS departamento_id, p.*
                 FROM info_padron AS p, departamentos AS d
                 WHERE p.departamento = UPPER(d.nombre_depto) AND p.provincia_id = d.id_provincia
                 ORDER BY departamento, id_depto;
@@ -202,19 +201,32 @@ consulta_sql = """
                 SELECT DISTINCT *
                 FROM info_padron_C;
 """
-df_padron0 = sql^consulta_sql
+padron_limpio = sql^consulta_sql
 
+#Vemos que todos los Operadores de la categoría 3 tienen su rubro como 'SIN DEFINIR' 
+#Decidimos completar la columna rubro con 'COMERCIALIZADORES'
+#En esta consulta, eliminamos también la columna de localidades y departamentos, dejando
+
+#Agremos una columna con la información modificada
+consulta_sql = """
+                SELECT departamento_id, pais_id, pais, provincia_id, provincia,
+                producto, categoria_id, categoria_desc, certificadora_id, certificadora_deno,
+                razon_social, establecimiento, REPLACE(rubro, 'SIN DEFINIR', 'COMERCIALIZADORES') AS rubro
+                FROM padron_limpio
+                ;
+"""
+padron_limpio = sql^consulta_sql
+
+#Hacemos el paso a 3FN
+certificadora = padron_limpio[['certificadora_id', 'certificadora_deno']].copy()
+certificadora = certificadora.drop_duplicates()
+
+categoria = padron_limpio[['categoria_id', 'categoria_desc']].copy()
+categoria =categoria.drop_duplicates()
+
+df_padron = padron_limpio[['razon_social', 'establecimiento', 'producto', 'rubro', 'departamento_id', 'certificadora_id', 'categoria_id']].copy()
 
 #Buscamos definir un df que exprese la relación entre rubro y clase
-#Vemos primero que todos los Operadores de la categoría 3 tienen su rubro como 'SIN DEFINIR' 
-#Decidimos completar la columna rubro con 'COMERCIALIZADORES'
-
-consulta_sql = """
-                SELECT departamento_id, establecimiento, razon_social, producto, certificadora_id, categoria_id, provincia_id, REPLACE(rubro, 'SIN DEFINIR', 'COMERCIALIZADORES') AS rubro
-                FROM df_padron0;
-"""
-df_padron = sql^consulta_sql
-
 #formo una lista con todos los distintos rubros que se encuentran dentro de la categoría 1
 df_productores = df_padron[df_padron['categoria_id']==1]
 rubros_productores = df_productores['rubro'].unique().tolist()
@@ -289,9 +301,13 @@ SQL
 
 consulta_sql = """
                 SELECT DISTINCT prov.nombre_provincia AS 'Provincias sin Operadores'
-                FROM df_padron AS padron
+                FROM (
+                        SELECT *
+                        FROM df_padron AS padron, departamentos AS d
+                        WHERE padron.departamento_id = d.id_depto
+                        ) AS p
                 RIGHT OUTER JOIN provincias AS prov
-                ON padron.provincia_id = prov.id_provincia
+                ON p.id_provincia = prov.id_provincia
                 WHERE prov.id_provincia IS NULL;
                 """
 prov_sin_operadores = sql^consulta_sql
@@ -299,19 +315,18 @@ prov_sin_operadores = sql^consulta_sql
 #¿Existen departamentos que no presentan Operadores Orgánicos Certificados?
                 
 consulta_sql= """
-                SELECT DISTINCT dpto.nombre_depto AS 'Departamentos sin Operadores', dpto.id_provincia
-                FROM df_padron AS padron
-                RIGHT OUTER JOIN departamentos AS dpto
-                ON padron.departamento_id = dpto.id_depto 
-                AND padron.provincia_id = dpto.id_provincia
-                WHERE padron.departamento_id IS NULL
+                SELECT DISTINCT d.nombre_depto AS 'Departamentos sin Operadores', d.id_provincia
+                FROM df_padron AS p
+                RIGHT OUTER JOIN departamentos AS d
+                ON p.departamento_id = d.id_depto 
+                WHERE p.departamento_id IS NULL
                 ORDER BY nombre_depto;
                 """
 dptos_sin_operadores = sql^consulta_sql
 
 consulta_sql = """
                 SELECT COUNT(*) AS 'Cantidad de departamentos sin Operadores'
-                FROM Dptos_sin_operadores;
+                FROM dptos_sin_operadores;
                 """
 cant_dptos_sin_operadores = sql^consulta_sql
 
@@ -323,7 +338,7 @@ cant_dptos_sin_operadores = sql^consulta_sql
 #Dejando una sola fila por cada operador orgánico trabajando en un rubro
 consulta_sql = """
                 SELECT DISTINCT departamento_id, establecimiento, razon_social, 
-                certificadora_id, categoria_id, provincia_id, rubro
+                certificadora_id, categoria_id, rubro
                 FROM df_padron;
 """
 operadores_por_rubro = sql^consulta_sql
