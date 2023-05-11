@@ -205,9 +205,7 @@ padron_limpio = sql^consulta_sql
 
 #Vemos que todos los Operadores de la categoría 3 tienen su rubro como 'SIN DEFINIR' 
 #Decidimos completar la columna rubro con 'COMERCIALIZADORES'
-#En esta consulta, eliminamos también la columna de localidades y departamentos, dejando
-
-#Agremos una columna con la información modificada
+#En esta consulta, eliminamos también la columna de localidades y departamentos, dejando el id del dpto como identificador
 consulta_sql = """
                 SELECT departamento_id, pais_id, pais, provincia_id, provincia,
                 producto, categoria_id, categoria_desc, certificadora_id, certificadora_deno,
