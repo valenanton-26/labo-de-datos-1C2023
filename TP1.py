@@ -462,3 +462,44 @@ consulta_sql = """
                 ORDER BY provincia, año;
                 """
 prom_y_desv_prov = sql^consulta_sql
+
+"""
+GRAFICOS
+"""
+
+#Cantidad de Operadores por provincia
+sns.set_palette('pastel')
+op = padron['provincia'].value_counts()
+op.plot.bar().set(title='Operadores por provincia') 
+
+
+#Boxplot, por cada provincia, donde se pueda observar la cantidad de productos por operador
+
+def grafico_provincia_prodXoperador(prov):
+    # del padron ya separado por producto pero antes de expresarlo en 3FN, busca los de la prov pasada
+    df_prov = padron_limpio[padron_limpio['provincia']== prov]
+
+    # cuenta la cantidad de cada producto, dejando la separacion por certificadora
+    consulta_sql = """
+                    SELECT certificadora_deno AS certificadora, producto , COUNT(producto) AS cantidad
+                    FROM df_prov
+                    GROUP BY producto, certificadora_deno;
+                    """
+    producto_y_cert = sql^consulta_sql
+
+    # grafica el df obtenido con la cantidad en funcion de la certificadora
+    sns.boxplot(data=producto_y_cert, x='certificadora', y='cantidad').set(title='Operadores por provincia: ' + prov) 
+    plt.show()
+    plt.close()
+    
+provincias = padron_limpio['provincia'].unique().tolist()
+
+# un for para que vaya graficando todas las provincias que aparecen en el df. 
+# Lo dejo comentado porque sino muy gede que se impriman todas
+"""
+for p in provincias:
+    grafico_provincia_prodXoperador(p)
+"""  
+
+grafico_provincia_prodXoperador("BUENOS AIRES")
+grafico_provincia_prodXoperador("ENTRE RIOS")
