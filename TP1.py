@@ -466,13 +466,14 @@ prom_y_desv_prov = sql^consulta_sql
 """
 GRAFICOS
 """
-
+# I
 #Cantidad de Operadores por provincia
 sns.set_palette('pastel')
 op = padron['provincia'].value_counts()
 op.plot.bar().set(title='Operadores por provincia') 
 
 
+# II
 #Boxplot, por cada provincia, donde se pueda observar la cantidad de productos por operador
 
 def grafico_provincia_prodXoperador(prov):
@@ -492,14 +493,60 @@ def grafico_provincia_prodXoperador(prov):
     plt.show()
     plt.close()
     
-provincias = padron_limpio['provincia'].unique().tolist()
+provincias_grafico = padron_limpio['provincia'].unique().tolist()
 
 # un for para que vaya graficando todas las provincias que aparecen en el df. 
 # Lo dejo comentado porque sino muy gede que se impriman todas
 """
-for p in provincias:
+for p in provincias_grafico:
     grafico_provincia_prodXoperador(p)
 """  
 
 grafico_provincia_prodXoperador("BUENOS AIRES")
 grafico_provincia_prodXoperador("ENTRE RIOS")
+
+# III
+# Relación entre cantidad de emprendimientos certificados de cada provincia y el salario promedio 
+# en dicha provincia (para la actividad) en el año 2022. En caso de existir más de un
+# salario promedio para ese año, mostrar el último del año 2022. 
+    
+
+
+# IV
+# ¿Cuál es la distribución de los salarios promedio en Argentina? Realicen un 
+# violinplot de los salarios promedio por provincia. 
+# Grafiquen el último ingreso medio por provincia.
+
+consulta_sql = """
+                 SELECT p.nombre_provincia AS provincia, MEAN(s.salario) AS salario, CAST(s.fecha AS DATE) AS fecha
+                 FROM info_salarios AS s
+                 INNER JOIN departamentos AS d ON s.id_depto = d.id_depto
+                 INNER JOIN provincias AS p ON d.id_provincia = p.id_provincia
+                 GROUP BY  p.nombre_provincia, s.fecha
+                 
+"""
+salario_por_prov = sql^consulta_sql
+
+
+def dist_salarioXprov(prov):
+    # el promedio por fecha de salarios de la provincia ingresada
+    salario_prov = salario_por_prov[salario_por_prov['provincia'] == prov]
+    
+    # el promedio mas reciente => le queda su grafico
+    salario_mas_reciente = salario_prov.sort_values('fecha', ascending=False).head(1)
+
+    # grafico de todos los promedios de salarios
+    sns.violinplot(data = salario_prov, x = 'provincia' , y = 'salario', scale ='width')
+    plt.show()
+    plt.close()
+
+
+# un for para que vaya graficando todas las provincias que aparecen en el df. 
+# Lo dejo comentado porque sino muy gede que se impriman todas
+"""
+for p in provincias:
+    dist_salarioXprov(p)
+"""  
+
+dist_salarioXprov('CABA')
+
