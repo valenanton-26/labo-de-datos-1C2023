@@ -25,7 +25,9 @@ dic_dptos = pd.read_csv("~/Descargas/diccionario_cod_depto.csv")
 """
 CALIDAD DE DATOS
 """
-#Para calcular las métricas propuestas:
+#Utilizando el sistema de GQM, definimos distintas metricas para analizar en 
+#cantidad la calidad de datos afectada, y utilizamos las siguientes consultas
+#SQL para contestarnos las preguntas planteadas. 
 consulta_sql = """
             	SELECT COUNT(*)
             	FROM localidades_censales
@@ -35,14 +37,14 @@ consulta_sql = """
 
 consulta_sql = """
 SELECT COUNT(localidad)
-FROM info_padron
+FROM padron
 WHERE localidad LIKE 'INDEFINID%' ;
 """
 #localidad_nulos = sql^consulta_sql
 
 consulta_sql = """
 SELECT COUNT(establecimiento)
-FROM info_padron
+FROM padron
 WHERE establecimiento LIKE 'NC' ;
 """
 #establecimiento_nulos = sql^consulta_sql
