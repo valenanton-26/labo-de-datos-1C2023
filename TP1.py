@@ -570,23 +570,37 @@ consulta_sql = """
                          AND CAST(s1.fecha AS DATE) > CAST(s.fecha AS DATE) 
                  )
                  GROUP BY  p.nombre_provincia, s.id_clase ,s.fecha, e.cant_estab_rubro
-                 ORDER BY p.nombre_provincia ASC, s.fecha DESC
+                 ORDER BY p.nombre_provincia ASC, s.fecha DESC, s.id_clase
                  
 """
 salario_por_prov_estab = sql^consulta_sql
 
 
+def grafico_prov_act_cant(prov):
+    salario_prov = salario_por_prov_estab[salario_por_prov_estab['provincia'] == prov]
 
-salario_prov = salario_por_prov_estab[salario_por_prov_estab['provincia'] == "Chaco"]
+    sal = salario_prov['salario']/1000
+    cant = salario_prov['cantidad_establecimientos']
+    clase = salario_prov['actividad']
+    
+    n=len(clase)
+    x=np.arange(n)
+    
+    plt.title("Salario promedio y cantidad de establecimientos en cada clase en " + prov)
+    plt.bar(x-0.10, sal, width=0.20 ,label="salario promedio" )
+    plt.bar(x+0.10, cant,width=0.20,label="cantidad" )
+    plt.xticks(x,clase)
+    plt.xlabel("id de la clase")
+    plt.ylabel("cantidad")
+    plt.legend(loc='best')
+    plt.show()
 
-sal = salario_prov['salario']/100
-cant = salario_prov['cantidad_establecimientos']
-clase = salario_prov['actividad']
 
-plt.bar(clase, sal + cant , width=5,label="salario promedio" )
-plt.bar(clase, cant, width=5,label="cantidad" )
-plt.legend(loc='best')
-plt.show()
+prov_graficoIII = salario_por_prov_estab['provincia'].unique().tolist()
+prov_graficoIII = np.sort(prov_graficoIII)
+
+for p in prov_graficoIII:
+    grafico_prov_act_cant(p)
 
 
 # IV
