@@ -16,6 +16,41 @@ localidades_censales = pd.read_csv("~/Descargas/localidades-censales.csv")
 dic_clases = pd.read_csv("~/Descargas/diccionario_clae2.csv")
 dic_dptos = pd.read_csv("~/Descargas/diccionario_cod_depto.csv")
 
+"""
+CALIDAD DE DATOS
+"""
+#Para calcular las métricas propuestas:
+consulta_sql = """
+            	SELECT COUNT(*)
+            	FROM localidades_censales
+            	WHERE municipio_id IS NULL;
+"""
+municipio_nulo = sql^consulta_sql
+
+consulta_sql = """
+SELECT COUNT(localidad)
+FROM info_padron
+WHERE localidad LIKE 'INDEFINID%' ;
+"""
+localidad_nulos = sql^consulta_sql
+
+consulta_sql = """
+SELECT COUNT(establecimiento)
+FROM info_padron
+WHERE establecimiento LIKE 'NC' ;
+"""
+establecimiento_nulos = sql^consulta_sql
+
+consulta_sql = """
+SELECT COUNT(w_median)
+FROM salarios
+WHERE w_median < 0;
+"""
+salario_invalido = sql^consulta_sql
+
+"""
+CODIGOS NORMALIZACION
+"""
 #Normalización
 #Defino una función para elimiar las tildes de un string
 def eliminar_tildes(s):
