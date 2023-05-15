@@ -3,12 +3,18 @@
 """
 Created on Tue May  9 14:11:54 2023
 
-@author: labo2023
+@author: 
+    Lara Herling, LU: 314/22
+    Camila Dramis, LU: 535/23
+    Valentina Anton, LU:322/20
 """
 import pandas as pd
 import csv
 from inline_sql import sql, sql_val
 from unidecode import unidecode
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 
 padron = pd.read_csv("~/Descargas/padron-de-operadores-organicos-certificados.csv", encoding='latin-1')
 salarios = pd.read_csv("~/Descargas/w_median_depto_priv_clae2.csv")
@@ -25,28 +31,28 @@ consulta_sql = """
             	FROM localidades_censales
             	WHERE municipio_id IS NULL;
 """
-municipio_nulo = sql^consulta_sql
+#municipio_nulo = sql^consulta_sql
 
 consulta_sql = """
 SELECT COUNT(localidad)
 FROM info_padron
 WHERE localidad LIKE 'INDEFINID%' ;
 """
-localidad_nulos = sql^consulta_sql
+#localidad_nulos = sql^consulta_sql
 
 consulta_sql = """
 SELECT COUNT(establecimiento)
 FROM info_padron
 WHERE establecimiento LIKE 'NC' ;
 """
-establecimiento_nulos = sql^consulta_sql
+#establecimiento_nulos = sql^consulta_sql
 
 consulta_sql = """
 SELECT COUNT(w_median)
 FROM salarios
 WHERE w_median < 0;
 """
-salario_invalido = sql^consulta_sql
+#salario_invalido = sql^consulta_sql
 
 """
 CODIGOS NORMALIZACION
@@ -120,15 +126,11 @@ padron['productos'] = padron['productos'].str.replace('\(CAROZO','CAROZO')
 padron['productos'] = padron['productos'].str.replace('.','')
 
 padron['rubro'] = padron['rubro'].str.strip()
-padron['rubro'] = padron['rubro'].str.replace('AGICULTURA/FRUTICULTURA','AGRICULTURA/FRUTICULTURA')
-padron['rubro'] = padron['rubro'].str.replace('AGICULTURA/HORTICULTURA','AGRICULTURA/HORTICULTURA')
-padron['rubro'] = padron['rubro'].str.replace('FRUTICULTURA/AGRICULTURA','AGRICULTURA/FRUTICULTURA')
-padron['rubro'] = padron['rubro'].str.replace('.','')
 
 #Departamentos a 3FN
 
 provincias = dic_dptos[['id_provincia_indec', 'nombre_provincia_indec']].copy()
-provincias =  provincias.drop_duplicates()
+provincias = provincias.drop_duplicates()
 provincias = provincias.rename(columns={'id_provincia_indec' : 'id_provincia', 'nombre_provincia_indec' :'nombre_provincia'})
 
 
@@ -176,11 +178,6 @@ info_salarios = info_salarios.rename(columns={'codigo_departamento_indec' : 'id_
 info_salarios = info_salarios[info_salarios['salario']>=0]
 
 #Padron a 3FN
-
-#Empiezo primero por las relaciones de categoría y certificadora
-certificadora = padron[['Certificadora_id', 'certificadora_deno']].copy()
-
-categoria = padron[['categoria_id', 'categoria_desc']].copy()
 
 #Empiezo la limpieza de padron
 info_padron = padron.copy()
