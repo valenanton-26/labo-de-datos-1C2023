@@ -505,11 +505,53 @@ for p in provincias_grafico:
 grafico_provincia_prodXoperador("BUENOS AIRES")
 grafico_provincia_prodXoperador("ENTRE RIOS")
 
+    
 # III
 # Relación entre cantidad de emprendimientos certificados de cada provincia y el salario promedio 
 # en dicha provincia (para la actividad) en el año 2022. En caso de existir más de un
 # salario promedio para ese año, mostrar el último del año 2022. 
-    
+consulta_sql = """
+                SELECT p.provincia_id, a.clase, COUNT(*) AS cant_estab_rubro
+                FROM padron_limpio AS p
+                INNER JOIN actividades AS a ON p.rubro = a.rubro
+                GROUP BY p.provincia_id, a.clase;
+                """
+establecimientos_por_prov = sql^consulta_sql
+
+
+consulta_sql = """
+                 SELECT p.nombre_provincia AS provincia, s.id_clase AS actividad ,MEAN(s.salario) AS salario, CAST(s.fecha AS DATE) AS fecha, e.cant_estab_rubro AS cantidad_establecimientos
+                 FROM info_salarios AS s
+                 INNER JOIN departamentos AS d ON s.id_depto = d.id_depto
+                 INNER JOIN provincias AS p ON d.id_provincia = p.id_provincia
+                 INNER JOIN establecimientos_por_prov AS e ON e.provincia_id = d.id_provincia AND e.clase = s.id_clase
+                 WHERE NOT EXISTS (
+                         SELECT *
+                         FROM info_salarios AS s1, departamentos AS d1, provincias AS p1, establecimientos_por_prov AS e1
+                         WHERE s1.id_depto = d1.id_depto AND d1.id_provincia = p1.id_provincia 
+                         AND e1.provincia_id = d1.id_provincia AND e1.clase = s1.id_clase
+                         AND p.nombre_provincia = p1.nombre_provincia 
+                         AND s.id_clase = s1.id_clase
+                         AND CAST(s1.fecha AS DATE) > CAST(s.fecha AS DATE) 
+                 )
+                 GROUP BY  p.nombre_provincia, s.id_clase ,s.fecha, e.cant_estab_rubro
+                 ORDER BY p.nombre_provincia ASC, s.fecha DESC
+                 
+"""
+salario_por_prov_estab = sql^consulta_sql
+
+
+
+salario_prov = salario_por_prov_estab[salario_por_prov_estab['provincia'] == "Chaco"]
+
+sal = salario_prov['salario']/100
+cant = salario_prov['cantidad_establecimientos']
+clase = salario_prov['actividad']
+
+plt.bar(clase, sal + cant , width=5,label="salario promedio" )
+plt.bar(clase, cant, width=5,label="cantidad" )
+plt.legend(loc='best')
+plt.show()
 
 
 # IV
@@ -523,30 +565,17 @@ consulta_sql = """
                  INNER JOIN departamentos AS d ON s.id_depto = d.id_depto
                  INNER JOIN provincias AS p ON d.id_provincia = p.id_provincia
                  GROUP BY  p.nombre_provincia, s.fecha
+                 ORDER BY p.nombre_provincia ASC
                  
 """
 salario_por_prov = sql^consulta_sql
 
 
-def dist_salarioXprov(prov):
-    # el promedio por fecha de salarios de la provincia ingresada
-    salario_prov = salario_por_prov[salario_por_prov['provincia'] == prov]
-    
-    # el promedio mas reciente => le queda su grafico
-    salario_mas_reciente = salario_prov.sort_values('fecha', ascending=False).head(1)
+# grafico de todos los promedios de salarios
+sns.set_palette('pastel')
+sns.violinplot(data = salario_por_prov, x = 'provincia' , y = 'salario', scale ='width').set(title='Operadores por provincia') 
+plt.tick_params(axis='x', labelrotation = 85)
+plt.show()
+plt.close()
 
-    # grafico de todos los promedios de salarios
-    sns.violinplot(data = salario_prov, x = 'provincia' , y = 'salario', scale ='width')
-    plt.show()
-    plt.close()
-
-
-# un for para que vaya graficando todas las provincias que aparecen en el df. 
-# Lo dejo comentado porque sino muy gede que se impriman todas
-"""
-for p in provincias:
-    dist_salarioXprov(p)
-"""  
-
-dist_salarioXprov('CABA')
 
