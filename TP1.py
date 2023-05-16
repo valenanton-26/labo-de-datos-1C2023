@@ -516,30 +516,29 @@ def grafico_provincia_prodXoperador(prov):
 
     # cuenta la cantidad de cada producto, dejando la separacion por certificadora
     consulta_sql = """
-                    SELECT certificadora_deno AS certificadora, producto , COUNT(producto) AS cantidad
+                    SELECT razon_social, establecimiento, COUNT(producto) AS cantidad
                     FROM df_prov
-                    GROUP BY producto, certificadora_deno;
+                    GROUP BY razon_social, establecimiento;
                     """
     producto_y_cert = sql^consulta_sql
-
+        
     # grafica el df obtenido con la cantidad en funcion de la certificadora
-    sns.boxplot(data=producto_y_cert, x='certificadora', y='cantidad').set(title='Operadores por provincia: ' + prov) 
+    sns.boxplot(data=producto_y_cert, x='razon_social', y='cantidad').set(title='Operadores por provincia: '+prov) 
+    plt.tick_params(axis='x', labelrotation = 90)
     plt.show()
     plt.close()
     
-provincias_grafico = padron_limpio['provincia'].unique().tolist()
 
+provincias_grafico = padron_limpio['provincia'].unique().tolist()
+provincias_grafico = np.sort(provincias_grafico)
 # un for para que vaya graficando todas las provincias que aparecen en el df. 
 # Lo dejo comentado porque sino muy gede que se impriman todas
 """
 for p in provincias_grafico:
     grafico_provincia_prodXoperador(p)
-"""  
+"""
+grafico_provincia_prodXoperador("LA RIOJA")
 
-grafico_provincia_prodXoperador("BUENOS AIRES")
-grafico_provincia_prodXoperador("ENTRE RIOS")
-
-    
 # III
 # Relación entre cantidad de emprendimientos certificados de cada provincia y el salario promedio 
 # en dicha provincia (para la actividad) en el año 2022. En caso de existir más de un
@@ -598,9 +597,10 @@ def grafico_prov_act_cant(prov):
 prov_graficoIII = salario_por_prov_estab['provincia'].unique().tolist()
 prov_graficoIII = np.sort(prov_graficoIII)
 
+"""
 for p in prov_graficoIII:
     grafico_prov_act_cant(p)
-
+"""
 
 # IV
 # ¿Cuál es la distribución de los salarios promedio en Argentina? Realicen un 
@@ -625,5 +625,6 @@ sns.violinplot(data = salario_por_prov, x = 'provincia' , y = 'salario', scale =
 plt.tick_params(axis='x', labelrotation = 85)
 plt.show()
 plt.close()
+
 
 
