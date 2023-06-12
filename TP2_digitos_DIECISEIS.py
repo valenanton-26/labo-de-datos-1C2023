@@ -64,7 +64,14 @@ def graficar(v):
     plt.show()
     plt.close()
     
+def pixeles_mas_relevantes(dat0, dat1, dat0y1):
+    pixeles_relevantes = []
     
+    for i in range(1,785,1):
+        if((np.linalg.norm(dat0[i] - dat0y1[i]) > 50) or (np.linalg.norm(dat1[i] - dat0y1[i]) > 50)):
+            pixeles_relevantes = np.append(pixeles_relevantes, i)
+    
+    return pixeles_relevantes    
 # los distintos promedios en arrays
 promedios = promedio_pixeles(datos)
 promedios_0 = promedio_pixeles(df_0)
@@ -75,7 +82,7 @@ promedios_0y1 = promedio_pixeles(df_0y1)
 pixel = np.arange(0,785,1)
 df_promedios = pd.DataFrame({'pixel': pixel, 'valor_promedio':promedios,'valor_promedio_0': promedios_0, 
                              'valor_promedio_1': promedios_1})
-
+pixeles_relevantes = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1)
 
 #graficos para explorar los datos
 plt.title("Cantidad de digitos por digito")
