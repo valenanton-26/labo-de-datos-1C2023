@@ -139,3 +139,136 @@ plt.xlim(0,28)
 plt.ylim(0,28)
 plt.show()
 plt.close()
+
+#Defino una función que, dadas las variables X e Y, el número de repeticiones y un valor n de vecinos
+#evalúa el modelo knn correspondiente, devoliendo el gráfico correspondiente a los promedios obtenidos
+#en función de la cantidad de vecinos considerada, y las matrices de resultados
+def knn(X, Y, rep, n):
+    repeticiones = rep
+    neigh = range(1, n+1)
+
+    resultados_test = np.zeros((repeticiones, len(neigh)))
+    resultados_train = np.zeros((repeticiones, len(neigh)))
+
+    for i in range(repeticiones):
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.2)
+        for k in neigh:
+            model = KNeighborsClassifier(n_neighbors = k)
+            model.fit(X_train, Y_train) 
+            Y_pred = model.predict(X_test)
+            Y_pred_train = model.predict(X_train)
+            acc_test = metrics.accuracy_score(Y_test, Y_pred)
+            acc_train = metrics.accuracy_score(Y_train, Y_pred_train)
+            resultados_test[i, k-1] = acc_test
+            resultados_train[i, k-1] = acc_train
+
+    promedios_train = np.mean(resultados_train, axis = 0) 
+    promedios_test = np.mean(resultados_test, axis = 0) 
+
+    plt.plot(neigh, promedios_train, label = 'Train')
+    plt.plot(neigh, promedios_test, label = 'Test')
+    plt.legend()
+    plt.title('Exactitud del modelo de knn')
+    plt.xlabel('Cantidad de vecinos')
+    plt.ylabel('Exactitud (accuracy)')
+    plt.show()
+    plt.close()
+    
+    return promedios_train, promedios_test
+
+#Defino una lista con los atributos que más marcan la difererencia entre 0 y 1, a partir de la función 
+#de pixeles_mas_relevantes
+
+pixeles_relevantesA = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 100)
+atributosA = []
+for p in pixeles_relevantesA:
+    atributosA.append(int(p))
+
+#Probamos la precisión de un modelo knn para distintos conjuntos de 3 atributos
+
+#Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
+cA = random.sample(atributosA, 3)
+
+X = df_0y1[[cA[0], cA[1], cA[2]]]
+Y = df_0y1[0]
+
+#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
+A3 = knn(X, Y, 5, 3)
+A5 = knn(X, Y, 5, 5)
+A7 = knn(X, Y, 5, 7)
+
+#Evaluamos la precisión del modelo extendiendo el listado de los atributos, usando la función
+#pixeles_mas_relevantes
+pixeles_relevantesB = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 100)
+atributosB = []
+for p in pixeles_relevantesA:
+    atributosB.append(int(p))
+
+#Probamos la precisión de un modelo knn para distintos conjuntos de 3 atributos
+
+#Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
+cB = random.sample(atributosB, 3) 
+
+X = df_0y1[[cB[0], cB[1], cB[2]]]
+Y = df_0y1[0]
+
+#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
+B3 = knn(X, Y, 5, 3)
+B5 = knn(X, Y, 5, 5)
+B7 = knn(X, Y, 5, 7)
+
+#Ahora evaluamos el comportamiento de la precisión del modelo tomando 3 atributos
+#aleatorios del conjunto total de atributos
+
+cC = []
+for i in range(1, 4):
+    atributo = random.randint(1, 785)
+    cC.append(atributo)
+
+X = df_0y1[[cC[0], cC[1], cC[2]]]
+Y = df_0y1[0]
+
+#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
+C3 = knn(X, Y, 5, 3)
+C5 = knn(X, Y, 5, 5)
+C7 = knn(X, Y, 5, 7)
+
+
+#Hacemos lo mismo para 4 atributos
+
+#Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
+cA = random.sample(atributosA, 4)
+
+X = df_0y1[[cA[0], cA[1], cA[2], cA[3]]]
+Y = df_0y1[0]
+
+#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
+A3 = knn(X, Y, 5, 3)
+A5 = knn(X, Y, 5, 5)
+A7 = knn(X, Y, 5, 7)
+
+#Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
+cB = random.sample(atributosB, 4) 
+
+X = df_0y1[[cB[0], cB[1], cB[2], cB[3]]]
+Y = df_0y1[0]
+
+#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
+B3 = knn(X, Y, 5, 3)
+B5 = knn(X, Y, 5, 5)
+B7 = knn(X, Y, 5, 7)
+
+#Ahora con 4 atributos aleatorios del conjunto total de atributos
+
+cC = []
+for i in range(1, 5):
+    atributo = random.randint(1, 785)
+    cC.append(atributo)
+
+X = df_0y1[[cC[0], cC[1], cC[2], cC[3]]]
+Y = df_0y1[0]
+
+#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
+C3 = knn(X, Y, 5, 3)
+C5 = knn(X, Y, 5, 5)
+C7 = knn(X, Y, 5, 7)
