@@ -289,29 +289,29 @@ knn_B = knn(X, Y, 5, 7)
 #%% 
 # Árboles de decisión
 
-X=datos
+X=datos.iloc[:60000, 1:] # de los datos no consideramos el valor del digito
 Y=datos[0].to_frame()
 
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.3) # 70% para train y 30% para test
-
-clf = DecisionTreeClassifier()
-clf = clf.fit(X_train, Y_train)
-
-
-arbol = tree.DecisionTreeClassifier(criterion = "entropy", max_depth= 6)
-arbol = arbol.fit(X_train,Y_train)
-#print(X_train)
-#print(X_test)
-Y_pred = arbol.predict(X_test)
-print("Exactitud del modelo:", metrics.accuracy_score(Y_test, Y_pred))
-
-#Usando un conjunto de atributos relevantes
-X=datos[[324,351,352,379,380,406,407,434,435,462,463,484,490,491]]
-Y=datos[0]
 X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3)
 
-clf_info = tree.DecisionTreeClassifier(criterion = "gini", max_depth = 6)
+# creamos el arbol con las siguientes decisiones:
+# criterio = ENTROPY
+# profundidad = 8
+clf_info = tree.DecisionTreeClassifier(criterion = "entropy", max_depth = 8)
 clf_info = clf_info.fit(X_train, y_train)
 
-plt.figure(figsize= [40,20])
-tree.plot_tree(clf_info, feature_names = [324,351,352,379,380,406,407,434,435,462,463,484,490,491], filled = True, rounded = True, fontsize = 8)
+# Para graficar el arbol construido
+#plt.figure(figsize= [40,20])
+#tree.plot_tree(clf_info,class_names = ['0','1','2','3','4','5','6','7','8','9'], filled = True, rounded = True, fontsize = 8)
+
+#Como el arbol impreso graficamente no queda legible, lo mostramos en forma de texto:
+texto = tree.export_text(clf_info)
+print(texto)
+
+# Evaluamos la exactitud del modelo
+Y_pred = clf_info.predict(X_test)
+print("Exactitud del modelo:", metrics.accuracy_score(y_test, Y_pred))
+
+# Creamos la matriz de confusion
+metrics.confusion_matrix(y_test, Y_pred)
+
