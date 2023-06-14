@@ -286,32 +286,48 @@ Y = df_0y1[0]
 
 knn_B = knn(X, Y, 5, 7)
 
-#%% 
-# Árboles de decisión
+#%% ARBOLES DE DECISION
+def arbol_decision(data):
+    X=data.iloc[:60000, 1:] # de los datos no consideramos el valor del digito
+    Y=data[0].to_frame()
 
-X=datos.iloc[:60000, 1:] # de los datos no consideramos el valor del digito
-Y=datos[0].to_frame()
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3)
+    
+    # creamos el arbol con las siguientes decisiones:
+    # criterio = ENTROPY
+    # profundidad = 8
+    clf_info = tree.DecisionTreeClassifier(criterion = "entropy", max_depth = 8)
+    clf_info = clf_info.fit(X_train, y_train)
+    
+    Y_pred = clf_info.predict(X_test)
+    exactitud = metrics.accuracy_score(y_test, Y_pred)
+    
+    # Creamos la matriz de confusion
+    matriz = metrics.confusion_matrix(y_test, Y_pred)
+    
+    return clf_info, exactitud, matriz
 
-X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3)
 
-# creamos el arbol con las siguientes decisiones:
-# criterio = ENTROPY
-# profundidad = 8
-clf_info = tree.DecisionTreeClassifier(criterion = "entropy", max_depth = 8)
-clf_info = clf_info.fit(X_train, y_train)
+# Datos desarrollo
+arbol = arbol_decision(datos)
+texto = tree.export_text(arbol[0])
+#print(texto)
+print("Exactitud del modelo:", arbol[1])
+matriz_confusion = arbol[2]
+print(matriz_confusion)
 
-# Para graficar el arbol construido
-#plt.figure(figsize= [40,20])
-#tree.plot_tree(clf_info,class_names = ['0','1','2','3','4','5','6','7','8','9'], filled = True, rounded = True, fontsize = 8)
+# Datos TEST
+arbol_T = arbol_decision(datosT)
+texto_T = tree.export_text(arbol_T[0])
+#print(texto_T)
+print("Exactitud del modelo:", arbol_T[1])
+matriz_confusion_T = arbol_T[2]
+print(matriz_confusion_T)
 
-#Como el arbol impreso graficamente no queda legible, lo mostramos en forma de texto:
-texto = tree.export_text(clf_info)
-print(texto)
-
-# Evaluamos la exactitud del modelo
-Y_pred = clf_info.predict(X_test)
-print("Exactitud del modelo:", metrics.accuracy_score(y_test, Y_pred))
-
-# Creamos la matriz de confusion
-metrics.confusion_matrix(y_test, Y_pred)
-
+# Datos TEST BINARIO
+arbol_TB = arbol_decision(datosTB)
+texto_TB = tree.export_text(arbol_TB[0])
+#print(texto_T)
+print("Exactitud del modelo:", arbol_TB[1])
+matriz_confusion_TB = arbol_TB[2]
+print(matriz_confusion_TB)
