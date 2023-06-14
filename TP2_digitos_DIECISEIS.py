@@ -293,3 +293,14 @@ arbol = arbol.fit(X_train,Y_train)
 #print(X_test)
 Y_pred = arbol.predict(X_test)
 print("Exactitud del modelo:", metrics.accuracy_score(Y_test, Y_pred))
+
+#Usando un conjunto de atributos relevantes
+X=datos[[324,351,352,379,380,406,407,434,435,462,463,484,490,491]]
+Y=datos[0]
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3)
+
+clf_info = tree.DecisionTreeClassifier(criterion = "gini", max_depth = 6)
+clf_info = clf_info.fit(X_train, y_train)
+
+plt.figure(figsize= [40,20])
+tree.plot_tree(clf_info, feature_names = [324,351,352,379,380,406,407,434,435,462,463,484,490,491], filled = True, rounded = True, fontsize = 8)
