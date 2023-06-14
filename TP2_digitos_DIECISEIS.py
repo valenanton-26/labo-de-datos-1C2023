@@ -195,16 +195,14 @@ cA = random.sample(atributosA, 3)
 X = df_0y1[[cA[0], cA[1], cA[2]]]
 Y = df_0y1[0]
 
-#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
-A3 = knn(X, Y, 5, 3)
-A5 = knn(X, Y, 5, 5)
-A7 = knn(X, Y, 5, 7)
+#Pruebo los resultados hasta 7 vecinos, usando 5 repeticiones
+knn_A = knn(X, Y, 5, 7)
 
 #Evaluamos la precisión del modelo extendiendo el listado de los atributos, usando la función
 #pixeles_mas_relevantes
-pixeles_relevantesB = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 100)
+pixeles_relevantesB = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 80)
 atributosB = []
-for p in pixeles_relevantesA:
+for p in pixeles_relevantesB:
     atributosB.append(int(p))
 
 #Probamos la precisión de un modelo knn para distintos conjuntos de 3 atributos
@@ -215,10 +213,7 @@ cB = random.sample(atributosB, 3)
 X = df_0y1[[cB[0], cB[1], cB[2]]]
 Y = df_0y1[0]
 
-#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
-B3 = knn(X, Y, 5, 3)
-B5 = knn(X, Y, 5, 5)
-B7 = knn(X, Y, 5, 7)
+knn_B = knn(X, Y, 5, 7)
 
 #Ahora evaluamos el comportamiento de la precisión del modelo tomando 3 atributos
 #aleatorios del conjunto total de atributos
@@ -231,24 +226,16 @@ for i in range(1, 4):
 X = df_0y1[[cC[0], cC[1], cC[2]]]
 Y = df_0y1[0]
 
-#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
-C3 = knn(X, Y, 5, 3)
-C5 = knn(X, Y, 5, 5)
-C7 = knn(X, Y, 5, 7)
-
+knn_C = knn(X, Y, 5, 7)
 
 #Hacemos lo mismo para 4 atributos
-
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cA = random.sample(atributosA, 4)
 
 X = df_0y1[[cA[0], cA[1], cA[2], cA[3]]]
 Y = df_0y1[0]
 
-#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
-A3 = knn(X, Y, 5, 3)
-A5 = knn(X, Y, 5, 5)
-A7 = knn(X, Y, 5, 7)
+knn_A = knn(X, Y, 5, 7)
 
 #Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cB = random.sample(atributosB, 4) 
@@ -256,10 +243,7 @@ cB = random.sample(atributosB, 4)
 X = df_0y1[[cB[0], cB[1], cB[2], cB[3]]]
 Y = df_0y1[0]
 
-#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
-B3 = knn(X, Y, 5, 3)
-B5 = knn(X, Y, 5, 5)
-B7 = knn(X, Y, 5, 7)
+knn_B = knn(X, Y, 5, 7)
 
 #Ahora con 4 atributos aleatorios del conjunto total de atributos
 
@@ -271,7 +255,21 @@ for i in range(1, 5):
 X = df_0y1[[cC[0], cC[1], cC[2], cC[3]]]
 Y = df_0y1[0]
 
-#Pruebo los resultados con 3, 5 y 7 vecinos, usando 5 repeticiones
-C3 = knn(X, Y, 5, 3)
-C5 = knn(X, Y, 5, 5)
-C7 = knn(X, Y, 5, 7)
+knn_C = knn(X, Y, 5, 7)
+
+#Hacemos lo mismo para 5 atributos
+#Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
+cA = random.sample(atributosA, 5)
+
+X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4]]]
+Y = df_0y1[0]
+
+knn_A = knn(X, Y, 5, 7)
+
+#Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
+cB = random.sample(atributosB, 5) 
+
+X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4]]]
+Y = df_0y1[0]
+
+knn_B = knn(X, Y, 5, 7)
