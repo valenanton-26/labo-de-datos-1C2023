@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
+from sklearn.tree import DecisionTreeClassifier
 import seaborn as sns
 
 encabezado = np.arange(0, 785, 1)
@@ -273,3 +274,22 @@ X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4]]]
 Y = df_0y1[0]
 
 knn_B = knn(X, Y, 5, 7)
+
+#%% 
+# Árboles de decisión
+
+X=datos
+Y=datos[0].to_frame()
+
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.3) # 70% para train y 30% para test
+
+clf = DecisionTreeClassifier()
+clf = clf.fit(X_train, Y_train)
+
+
+arbol = tree.DecisionTreeClassifier(criterion = "entropy", max_depth= 6)
+arbol = arbol.fit(X_train,Y_train)
+#print(X_train)
+#print(X_test)
+Y_pred = arbol.predict(X_test)
+print("Exactitud del modelo:", metrics.accuracy_score(Y_test, Y_pred))
