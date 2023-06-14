@@ -13,6 +13,8 @@ import seaborn as sns
 #%% DATOS
 encabezado = np.arange(0, 785, 1)
 datos = pd.read_csv("~/Descargas/mnist_desarrollo.csv", names=encabezado)
+datosT = pd.read_csv("~/Descargas/mnist_test.csv", names=encabezado)
+datosTB = pd.read_csv("~/Descargas/mnist_test_binario.csv", names=encabezado)
 
 #%% Analisis exploratorio
 
