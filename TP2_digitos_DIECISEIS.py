@@ -138,6 +138,7 @@ plt.legend(loc='best')
 plt.show()
 
 # grafico para ver la distribucion de los pixeles
+plt.title("Promedio de intensidad por píxeĺ")
 sns.scatterplot(data = df_promedios , x = 'pixel' , y = 'valor_promedio_0')
 sns.scatterplot(data = df_promedios , x = 'pixel' , y = 'valor_promedio_1')
 sns.scatterplot(data = df_promedios , x = 'pixel' , y = 'valor_promedio')
