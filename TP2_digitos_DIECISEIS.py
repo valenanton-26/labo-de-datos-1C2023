@@ -54,6 +54,7 @@ def graficar(v):
     
     plt.imshow(figura, cmap='inferno')
     plt.title("Grafico de calor del promedio de todos los digitos")
+    plt.colorbar()
     plt.show()
     plt.close()
     
