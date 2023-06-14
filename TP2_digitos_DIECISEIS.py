@@ -240,48 +240,48 @@ Y = df_0y1[0]
 
 knn_C = knn(X, Y, 5, 7)
 
-#Hacemos lo mismo para 4 atributos
+#Hacemos lo mismo para 7 atributos
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
-cA = random.sample(atributosA, 4)
+cA = random.sample(atributosA, 7)
 
-X = df_0y1[[cA[0], cA[1], cA[2], cA[3]]]
+X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6]]]
 Y = df_0y1[0]
 
 knn_A = knn(X, Y, 5, 7)
 
 #Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
-cB = random.sample(atributosB, 4) 
+cB = random.sample(atributosB, 7) 
 
-X = df_0y1[[cB[0], cB[1], cB[2], cB[3]]]
+X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4], cB[5], cB[6]]]
 Y = df_0y1[0]
 
 knn_B = knn(X, Y, 5, 7)
 
-#Ahora con 4 atributos aleatorios del conjunto total de atributos
+#Ahora con 7 atributos aleatorios del conjunto total de atributos
 
 cC = []
-for i in range(1, 5):
+for i in range(1, 8):
     atributo = random.randint(1, 785)
     cC.append(atributo)
 
-X = df_0y1[[cC[0], cC[1], cC[2], cC[3]]]
+X = df_0y1[[cC[0], cC[1], cC[2], cC[3], cC[4], cC[5], cC[6]]]
 Y = df_0y1[0]
 
 knn_C = knn(X, Y, 5, 7)
 
-#Hacemos lo mismo para 5 atributos
+#Hacemos lo mismo para 10 atributos
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
-cA = random.sample(atributosA, 5)
+cA = random.sample(atributosA, 10)
 
-X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4]]]
+X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6], cA[7], cA[8], cA[9]]]
 Y = df_0y1[0]
 
 knn_A = knn(X, Y, 5, 7)
 
 #Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
-cB = random.sample(atributosB, 5) 
+cB = random.sample(atributosB, 10) 
 
-X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4]]]
+X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4], cB[5], cB[6], cB[7], cB[8], cB[9]]]
 Y = df_0y1[0]
 
 knn_B = knn(X, Y, 5, 7)
