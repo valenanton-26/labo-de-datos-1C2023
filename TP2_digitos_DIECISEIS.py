@@ -1,3 +1,4 @@
+#%% IMPORTS
 import pandas as pd
 import random
 import matplotlib.pyplot as plt
@@ -5,16 +6,17 @@ import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
+from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
 import seaborn as sns
 
+#%% DATOS
 encabezado = np.arange(0, 785, 1)
 datos = pd.read_csv("~/Descargas/mnist_desarrollo.csv", names=encabezado)
 
-# Analisis exploratorio
+#%% Analisis exploratorio
 
+# FUNCIONES
 #Funcion que, dado un dígito y una base de datos devuelve un nuevo df con las filas correspondientes a ese digito
 def df_digito (n, datos):
     nombre_columna = datos.columns[0]
@@ -54,11 +56,11 @@ def graficar(v):
     plt.close()
     
     
-def pixeles_mas_relevantes(dat0, dat1, dat0y1):
+def pixeles_mas_relevantes(dat0, dat1, dat0y1, m):
     pixeles_relevantes = []
     
     for i in range(1,785,1):
-        if((np.linalg.norm(dat0[i] - dat0y1[i]) > 80) or (np.linalg.norm(dat1[i] - dat0y1[i]) > 80)):
+        if((np.linalg.norm(dat0[i] - dat0y1[i]) > m) or (np.linalg.norm(dat1[i] - dat0y1[i]) > m)):
             pixeles_relevantes = np.append(pixeles_relevantes, i)
     
     return pixeles_relevantes    
@@ -93,6 +95,8 @@ digitos = datos[0]
 digitos = digitos.drop_duplicates().to_numpy()
 digitos.sort()
 
+promedio_total = cantidadDatos/ len(digitos)
+
 # data frames creados    
 df_0 = df_digito(0,datos)
 df_1 = df_digito(1,datos)
@@ -115,19 +119,22 @@ promedios_0y1 = promedio_pixeles(df_0y1)
 pixel = np.arange(0,785,1)
 df_promedios = pd.DataFrame({'pixel': pixel, 'valor_promedio':promedios,'valor_promedio_0': promedios_0, 
                              'valor_promedio_1': promedios_1})
-pixeles_relevantes = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1)
+pixeles_relevantes = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 80)
 m_pixeles_relevantes = matriz_pixeles_relevantes(pixeles_relevantes)
 
 #graficos para explorar los datos
-plt.title("Cantidad de digitos por digito")
+x = np.arange(-0.4,10,1)
+
+plt.title("Cantidad de datos por digito")
 plt.bar(digitos,cantPorDigito,label="cantidad por digitos" )
+plt.plot(x, x*0 + promedio_total, label="prom cant general", color="r")
 plt.xticks(digitos)
 plt.xlabel("digitos")
 plt.ylabel("cantidad")
 plt.legend(loc='best')
 plt.show()
 
-
+# grafico para ver la distribucion de los pixeles
 sns.scatterplot(data = df_promedios , x = 'pixel' , y = 'valor_promedio_0')
 sns.scatterplot(data = df_promedios , x = 'pixel' , y = 'valor_promedio_1')
 sns.scatterplot(data = df_promedios , x = 'pixel' , y = 'valor_promedio')
@@ -146,6 +153,7 @@ plt.ylim(0,28)
 plt.show()
 plt.close()
 
+#%% KNN
 #Defino una función que, dadas las variables X e Y, el número de repeticiones y un valor n de vecinos
 #evalúa el modelo knn correspondiente, devoliendo el gráfico correspondiente a los promedios obtenidos
 #en función de la cantidad de vecinos considerada, y las matrices de resultados
