@@ -198,7 +198,7 @@ def knn(X, Y, rep, n, titulo):
 #Defino una lista con los atributos que más marcan la difererencia entre 0 y 1, a partir de la función 
 #de pixeles_mas_relevantes
 
-pixeles_relevantesA = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 100)
+pixeles_relevantesA = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 87)
 atributosA = []
 for p in pixeles_relevantesA:
     atributosA.append(int(p))
@@ -208,15 +208,17 @@ for p in pixeles_relevantesA:
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cA = random.sample(atributosA, 3)
 
-X = df_0y1[[cA[0], cA[1], cA[2]]]
+X = df_0y1[cA]
 Y = df_0y1[0]
 
 #Pruebo los resultados hasta 7 vecinos, usando 5 repeticiones
 knn_A = knn(X, Y, 5, 10, 'Modelo knn - Grupo A - 3 atributos')
+promedios_trainA = knn_A[0]
+promedios_testA = knn_A[1]
 
 #Evaluamos la precisión del modelo extendiendo el listado de los atributos, usando la función
 #pixeles_mas_relevantes
-pixeles_relevantesB = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 80)
+pixeles_relevantesB = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 40)
 atributosB = []
 for p in pixeles_relevantesB:
     atributosB.append(int(p))
@@ -226,10 +228,12 @@ for p in pixeles_relevantesB:
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cB = random.sample(atributosB, 3) 
 
-X = df_0y1[[cB[0], cB[1], cB[2]]]
+X = df_0y1[cB]
 Y = df_0y1[0]
 
 knn_B = knn(X, Y, 5, 10, 'Modelo knn - Grupo B - 3 atributos')
+promedios_trainB = knn_B[0]
+promedios_testB = knn_B[1]
 
 #Ahora evaluamos el comportamiento de la precisión del modelo tomando 3 atributos
 #aleatorios del conjunto total de atributos
@@ -239,68 +243,81 @@ for i in range(1, 4):
     atributo = random.randint(1, 785)
     cC.append(atributo)
 
-X = df_0y1[[cC[0], cC[1], cC[2]]]
+X = df_0y1[cC]
 Y = df_0y1[0]
 
 knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 3 atributos')
+promedios_trainC = knn_C[0]
+promedios_testC = knn_C[1]
 
 #Hacemos lo mismo para 7 atributos
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cA = random.sample(atributosA, 7)
 
-X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6]]]
+X = df_0y1[cA]
 Y = df_0y1[0]
 
 knn_A = knn(X, Y, 5, 10, 'Modelo knn - Grupo A - 7 atributos')
+promedios_trainA = knn_A[0]
+promedios_testA = knn_A[1]
 
 #Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cB = random.sample(atributosB, 7) 
 
-X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4], cB[5], cB[6]]]
+X = df_0y1[cB]
 Y = df_0y1[0]
 
 knn_B = knn(X, Y, 5, 10, 'Modelo knn - Grupo B - 7 atributos')
+promedios_trainB = knn_B[0]
+promedios_testB = knn_B[1]
 
 #Ahora con 7 atributos aleatorios del conjunto total de atributos
-
 cC = []
 for i in range(1, 8):
     atributo = random.randint(1, 785)
     cC.append(atributo)
 
-X = df_0y1[[cC[0], cC[1], cC[2], cC[3], cC[4], cC[5], cC[6]]]
+X = df_0y1[cC]
 Y = df_0y1[0]
 
 knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 7 atributos')
+promedios_trainC = knn_C[0]
+promedios_testC = knn_C[1]
 
-#Hacemos lo mismo para 10 atributos
-#Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
-cA = random.sample(atributosA, 10)
+#Repetimos para 20 atributos
 
-X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6], cA[7], cA[8], cA[9]]]
+#Grupo A
+cA = random.sample(atributosA, 20)
+
+X = df_0y1[cA]
 Y = df_0y1[0]
 
-knn_A = knn(X, Y, 5, 10, 'Modelo knn - Grupo A - 10 atributos')
+knn_A = knn(X, Y, 5, 10, 'Modelo knn - Grupo A - 20 atributos')
+promedios_trainA = knn_A[0]
+promedios_testA = knn_A[1]
 
-#Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
-cB = random.sample(atributosB, 10) 
+#Ahora evaluamos con atributos seleccionados del listado B
+cB = random.sample(atributosB, 20) 
 
-X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4], cB[5], cB[6], cB[7], cB[8], cB[9]]]
+X = df_0y1[cB]
 Y = df_0y1[0]
 
-knn_B = knn(X, Y, 5, 10, 'Modelo knn - Grupo B - 10 atributos')
+knn_B = knn(X, Y, 5, 10, 'Modelo knn - Grupo B - 20 atributos')
+promedios_trainB = knn_B[0]
+promedios_testB = knn_B[1]
 
-#Ahora con 10 atributos aleatorios del conjunto total de atributos
-
+#Ahora con 20 atributos aleatorios del conjunto total de atributos
 cC = []
-for i in range(1, 8):
+for i in range(1, 21):
     atributo = random.randint(1, 785)
     cC.append(atributo)
 
-X = df_0y1[[cC[0], cC[1], cC[2], cC[3], cC[4], cC[5], cC[6], cC[7], cC[8], cC[9]]]
+X = df_0y1[cC]
 Y = df_0y1[0]
 
-knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 10 atributos')
+knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 20 atributos')
+promedios_trainC = knn_C[0]
+promedios_testC = knn_C[1]
 
 #%% ARBOLES DE DECISION
 def arbol_decision(data):
