@@ -58,12 +58,13 @@ def graficar(v):
     
 def pixeles_mas_relevantes(dat0, dat1, dat0y1, m):
     pixeles_relevantes = []
+    l = dat0y1.shape[0]
     
-    for i in range(1,785,1):
+    for i in range(1,l,1):
         if((np.linalg.norm(dat0[i] - dat0y1[i]) > m) or (np.linalg.norm(dat1[i] - dat0y1[i]) > m)):
             pixeles_relevantes = np.append(pixeles_relevantes, i)
     
-    return pixeles_relevantes    
+    return pixeles_relevantes      
 
 
 def matriz_pixeles_relevantes(array):
