@@ -212,7 +212,7 @@ X = df_0y1[[cA[0], cA[1], cA[2]]]
 Y = df_0y1[0]
 
 #Pruebo los resultados hasta 7 vecinos, usando 5 repeticiones
-knn_A = knn(X, Y, 5, 7, 'Modelo knn - Grupo A - 3 atributos')
+knn_A = knn(X, Y, 5, 10, 'Modelo knn - Grupo A - 3 atributos')
 
 #Evaluamos la precisión del modelo extendiendo el listado de los atributos, usando la función
 #pixeles_mas_relevantes
@@ -229,7 +229,7 @@ cB = random.sample(atributosB, 3)
 X = df_0y1[[cB[0], cB[1], cB[2]]]
 Y = df_0y1[0]
 
-knn_B = knn(X, Y, 5, 7, 'Modelo knn - Grupo B - 3 atributos')
+knn_B = knn(X, Y, 5, 10, 'Modelo knn - Grupo B - 3 atributos')
 
 #Ahora evaluamos el comportamiento de la precisión del modelo tomando 3 atributos
 #aleatorios del conjunto total de atributos
@@ -242,7 +242,7 @@ for i in range(1, 4):
 X = df_0y1[[cC[0], cC[1], cC[2]]]
 Y = df_0y1[0]
 
-knn_C = knn(X, Y, 5, 7, 'Modelo knn - Grupo C - 3 atributos')
+knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 3 atributos')
 
 #Hacemos lo mismo para 7 atributos
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
@@ -251,7 +251,7 @@ cA = random.sample(atributosA, 7)
 X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6]]]
 Y = df_0y1[0]
 
-knn_A = knn(X, Y, 5, 7, 'Modelo knn - Grupo A - 7 atributos')
+knn_A = knn(X, Y, 5, 10, 'Modelo knn - Grupo A - 7 atributos')
 
 #Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cB = random.sample(atributosB, 7) 
@@ -259,7 +259,7 @@ cB = random.sample(atributosB, 7)
 X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4], cB[5], cB[6]]]
 Y = df_0y1[0]
 
-knn_B = knn(X, Y, 5, 7, 'Modelo knn - Grupo B - 7 atributos')
+knn_B = knn(X, Y, 5, 10, 'Modelo knn - Grupo B - 7 atributos')
 
 #Ahora con 7 atributos aleatorios del conjunto total de atributos
 
@@ -271,7 +271,7 @@ for i in range(1, 8):
 X = df_0y1[[cC[0], cC[1], cC[2], cC[3], cC[4], cC[5], cC[6]]]
 Y = df_0y1[0]
 
-knn_C = knn(X, Y, 5, 7, 'Modelo knn - Grupo C - 7 atributos')
+knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 7 atributos')
 
 #Hacemos lo mismo para 10 atributos
 #Primero evaluamos con atributos seleccionados del listado reducido de atributos relevantes
@@ -280,7 +280,7 @@ cA = random.sample(atributosA, 10)
 X = df_0y1[[cA[0], cA[1], cA[2], cA[3], cA[4], cA[5], cA[6], cA[7], cA[8], cA[9]]]
 Y = df_0y1[0]
 
-knn_A = knn(X, Y, 5, 7, 'Modelo knn - Grupo A - 10 atributos')
+knn_A = knn(X, Y, 5, 10, 'Modelo knn - Grupo A - 10 atributos')
 
 #Ahora evaluamos con atributos seleccionados del listado reducido de atributos relevantes
 cB = random.sample(atributosB, 10) 
@@ -288,7 +288,7 @@ cB = random.sample(atributosB, 10)
 X = df_0y1[[cB[0], cB[1], cB[2], cB[3], cB[4], cB[5], cB[6], cB[7], cB[8], cB[9]]]
 Y = df_0y1[0]
 
-knn_B = knn(X, Y, 5, 7, 'Modelo knn - Grupo B - 10 atributos')
+knn_B = knn(X, Y, 5, 10, 'Modelo knn - Grupo B - 10 atributos')
 
 #Ahora con 10 atributos aleatorios del conjunto total de atributos
 
@@ -300,7 +300,7 @@ for i in range(1, 8):
 X = df_0y1[[cC[0], cC[1], cC[2], cC[3], cC[4], cC[5], cC[6], cC[7], cC[8], cC[9]]]
 Y = df_0y1[0]
 
-knn_C = knn(X, Y, 5, 7, 'Modelo knn - Grupo C - 10 atributos')
+knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 10 atributos')
 
 #%% ARBOLES DE DECISION
 def arbol_decision(data):
