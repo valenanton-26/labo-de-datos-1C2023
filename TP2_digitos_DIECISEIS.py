@@ -4,7 +4,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, KFold
 from sklearn import metrics
 from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
@@ -320,7 +320,30 @@ promedios_trainC = knn_C[0]
 promedios_testC = knn_C[1]
 
 #%% ARBOLES DE DECISION
-def arbol_decision(data):
+
+def max_altura_mejor_precision(datos):
+    X=datos.iloc[:60000, 1:] # de los datos no consideramos el valor del digito
+    Y=datos[0].to_frame()
+
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3,random_state=0)
+        
+    # metodo de cross_validation con k-folding para encontrar la altura que mejor precision nos ofrece para un set de datos
+    profundidades = []
+    for i in range(3,10):
+        clf_info = tree.DecisionTreeClassifier(criterion = "entropy", max_depth = i)
+        clf_info = clf_info.fit(X_train, y_train)
+        kfold = KFold(n_splits=5,shuffle=True,random_state=42)
+        scores = cross_val_score(clf_info, X, Y, cv=kfold)
+        
+        profundidades.append((i, scores.mean()))
+
+    max_altura = max(profundidades)
+    max_altura = max_altura[0]
+    
+    return max_altura
+
+
+def arbol_decision(data , altura):
     X=data.iloc[:60000, 1:] # de los datos no consideramos el valor del digito
     Y=data[0].to_frame()
 
@@ -329,7 +352,7 @@ def arbol_decision(data):
     # creamos el arbol con las siguientes decisiones:
     # criterio = ENTROPY
     # profundidad = 8
-    clf_info = tree.DecisionTreeClassifier(criterion = "entropy", max_depth = 8)
+    clf_info = tree.DecisionTreeClassifier(criterion = "entropy", max_depth = altura)
     clf_info = clf_info.fit(X_train, y_train)
     
     Y_pred = clf_info.predict(X_test)
@@ -342,7 +365,9 @@ def arbol_decision(data):
 
 
 # Datos desarrollo
-arbol = arbol_decision(datos)
+alt = max_altura_mejor_precision(datos)
+
+arbol = arbol_decision(datos, 9)
 texto = tree.export_text(arbol[0])
 #print(texto)
 print("Exactitud del modelo:", arbol[1])
@@ -350,17 +375,9 @@ matriz_confusion = arbol[2]
 print(matriz_confusion)
 
 # Datos TEST
-arbol_T = arbol_decision(datosT)
+arbol_T = arbol_decision(datosT, 9) #usamos la altura hallada con los datos de desarrollo ya que es parte de las configuraciones del modelo
 texto_T = tree.export_text(arbol_T[0])
 #print(texto_T)
 print("Exactitud del modelo:", arbol_T[1])
 matriz_confusion_T = arbol_T[2]
 print(matriz_confusion_T)
-
-# Datos TEST BINARIO
-arbol_TB = arbol_decision(datosTB)
-texto_TB = tree.export_text(arbol_TB[0])
-#print(texto_T)
-print("Exactitud del modelo:", arbol_TB[1])
-matriz_confusion_TB = arbol_TB[2]
-print(matriz_confusion_TB)
