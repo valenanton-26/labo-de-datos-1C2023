@@ -319,6 +319,33 @@ knn_C = knn(X, Y, 5, 10, 'Modelo knn - Grupo C - 20 atributos')
 promedios_trainC = knn_C[0]
 promedios_testC = knn_C[1]
 
+#%% TESTEO
+
+#TEST BINARIO
+
+df0_test = df_digito(0, datosTB)
+df1_test = df_digito(1, datosTB)
+df0y1_test = pd.concat([df0_test, df1_test])
+
+#Defino el conjunto de los atributos relevantes para entrenamiento del modelo
+pixeles_relevantes_train = pixeles_mas_relevantes(promedios_0, promedios_1, promedios_0y1, 87)
+atributos_train = []
+for p in pixeles_relevantes_train:
+    atributos_train.append(int(p))
+
+X_train = df_0y1[atributos_train]
+Y_train = df_0y1[0]
+X_test = df0y1_test[atributos_train]
+Y_test = df0y1_test[0]
+
+model = KNeighborsClassifier(n_neighbors = 7)
+model.fit(X_train, Y_train) 
+Y_pred = model.predict(X_test) 
+
+#Calculo las métricas
+metrics.accuracy_score(Y_test, Y_pred)
+metrics.confusion_matrix(Y_test, Y_pred)
+
 #%% ARBOLES DE DECISION
 
 def max_altura_mejor_precision(datos):
